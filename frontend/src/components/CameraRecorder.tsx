@@ -66,29 +66,34 @@ const CameraRecorder = forwardRef<CameraRecorderHandle, Props>(
         if (!streamRef.current) return;
         chunksRef.current = [];
 
-        const recorder = new MediaRecorder(streamRef.current, {
-          mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-            ? "video/webm;codecs=vp9"
-            : "video/webm",
-        });
+        const mimeType = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"]
+          .find((candidate) => MediaRecorder.isTypeSupported(candidate));
+        const options: MediaRecorderOptions = { videoBitsPerSecond: 2_000_000 };
+        if (mimeType) options.mimeType = mimeType;
+        const recorder = new MediaRecorder(streamRef.current, options);
 
         recorder.ondataavailable = (e) => {
           if (e.data.size > 0) chunksRef.current.push(e.data);
         };
 
         recorder.onstop = () => {
-          const blob = new Blob(chunksRef.current, { type: "video/webm" });
-          onRecordingComplete(blob);
+          const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "video/webm" });
+          if (blob.size > 0) onRecordingComplete(blob);
+          else onCameraError("Recording produced an empty video file");
           setIsRecording(false);
         };
 
-        recorder.start(250); // Collect chunks every 250ms
+        recorder.onerror = () => {
+          onCameraError("The browser could not encode the recording");
+          setIsRecording(false);
+        };
+        recorder.start();
         recorderRef.current = recorder;
         setIsRecording(true);
       },
 
       stopRecording() {
-        recorderRef.current?.stop();
+        if (recorderRef.current?.state === "recording") recorderRef.current.stop();
       },
     }));
 

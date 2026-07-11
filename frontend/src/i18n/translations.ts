@@ -171,6 +171,9 @@ export const translations = {
     loading_m3: "Calculating screening indicators...",
     loading_m4: "Preparing your report...",
     loading_disclaimer: "EyeInsight is a screening support tool — not a diagnostic system.",
+    analysis_failed_title: "Video analysis could not be completed",
+    analysis_failed_body: "The recorded video could not be processed. Please record again and keep this page open until the upload is complete.",
+    analysis_retry: "Record again",
 
     // Result — UI chrome (content comes from code maps above)
     result_title: "Screening Result",
@@ -279,6 +282,9 @@ export const translations = {
     loading_m3: "Расчёт показателей скрининга...",
     loading_m4: "Подготовка отчёта...",
     loading_disclaimer: "EyeInsight — инструмент скрининга, а не диагностическая система.",
+    analysis_failed_title: "Не удалось завершить анализ видео",
+    analysis_failed_body: "Записанное видео не удалось обработать. Запишите его снова и не закрывайте страницу до завершения загрузки.",
+    analysis_retry: "Записать снова",
 
     result_title: "Результат скрининга",
     result_disclaimer_title: "⚠️ Это не медицинский диагноз",
@@ -383,6 +389,9 @@ export const translations = {
     loading_m3: "Скрининг көрсеткіштерін есептеу...",
     loading_m4: "Есепті дайындау...",
     loading_disclaimer: "EyeInsight — скрининг құралы, диагностикалық жүйе емес.",
+    analysis_failed_title: "Бейне талдауын аяқтау мүмкін болмады",
+    analysis_failed_body: "Жазылған бейнені өңдеу мүмкін болмады. Қайта жазып, жүктеу аяқталғанша осы бетті ашық ұстаңыз.",
+    analysis_retry: "Қайта жазу",
 
     result_title: "Скрининг нәтижесі",
     result_disclaimer_title: "⚠️ Бұл медициналық диагноз емес",

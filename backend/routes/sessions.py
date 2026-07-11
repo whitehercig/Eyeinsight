@@ -77,6 +77,13 @@ async def upload_video(
         if os.path.exists(file_path):
             os.remove(file_path)
         raise HTTPException(status_code=422, detail="Uploaded video is empty")
+    with open(file_path, "rb") as uploaded_file:
+        header = uploaded_file.read(12)
+    is_webm = suffix == ".webm" and header.startswith(b"\x1a\x45\xdf\xa3")
+    is_iso_media = suffix in {".mp4", ".mov"} and header[4:8] == b"ftyp"
+    if not (is_webm or is_iso_media):
+        os.remove(file_path)
+        raise HTTPException(status_code=422, detail="Uploaded video has an invalid container header")
 
     session.video_path = file_path
     session.status = "uploaded"

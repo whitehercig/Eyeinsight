@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { analyzeSession } from "../api/client";
 import { useApp } from "../context/AppContext";
@@ -9,6 +9,7 @@ export default function LoadingAnalysisPage() {
   const navigate = useNavigate();
   const { t } = useApp();
   const called = useRef(false);
+  const [analysisFailed, setAnalysisFailed] = useState(false);
 
   const messages = [t("loading_m1"), t("loading_m2"), t("loading_m3"), t("loading_m4")];
 
@@ -21,7 +22,7 @@ export default function LoadingAnalysisPage() {
         await analyzeSession(sessionId!);
         navigate(`/result/${sessionId}`, { replace: true });
       } catch {
-        navigate(`/result/${sessionId}?error=1`, { replace: true });
+        setAnalysisFailed(true);
       }
     }
     run();
@@ -31,6 +32,13 @@ export default function LoadingAnalysisPage() {
     <div className="min-h-screen flex flex-col">
       <Navbar homeLink />
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-8">
+        {analysisFailed ? (
+          <div className="card-glass p-7 max-w-md">
+            <h2 className="text-xl font-semibold mb-3" style={{ color: "#ef4444" }}>{t("analysis_failed_title")}</h2>
+            <p className="text-sm text-ui-muted mb-5">{t("analysis_failed_body")}</p>
+            <button onClick={() => navigate("/screening", { replace: true })} className="btn-primary w-full">{t("analysis_retry")}</button>
+          </div>
+        ) : <>
         {/* Animated eye */}
         <div className="relative">
           <div className="w-24 h-24 rounded-full flex items-center justify-center"
@@ -62,6 +70,7 @@ export default function LoadingAnalysisPage() {
         </div>
 
         <div className="disclaimer-banner max-w-sm text-xs">{t("loading_disclaimer")}</div>
+        </>}
       </div>
     </div>
   );
