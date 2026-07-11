@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+
+  /* ── LIGHT theme (default) ── */
+  :root {
+    --bg:          #f8fafc;
+    --bg-card:     #ffffff;
+    --border:      #e2e8f0;
+    --text:        #0f172a;
+    --text-muted:  #64748b;
+    --text-subtle: #94a3b8;
+    --btn-sec-text:#475569;
+    --disclaimer-bg:  rgba(245,158,11,0.08);
+    --disclaimer-border: rgba(245,158,11,0.35);
+    --disclaimer-text:   #b45309;
+    --scrollbar-track:  #e2e8f0;
+    --scrollbar-thumb:  #cbd5e1;
+  }
+
+  /* ── DARK theme ── */
+  .dark {
+    --bg:          #0b1120;
+    --bg-card:     #111827;
+    --border:      #1e293b;
+    --text:        #f1f5f9;
+    --text-muted:  #94a3b8;
+    --text-subtle: #475569;
+    --btn-sec-text:#94a3b8;
+    --disclaimer-bg:   rgba(245,158,11,0.05);
+    --disclaimer-border: rgba(245,158,11,0.25);
+    --disclaimer-text:   #f59e0b;
+    --scrollbar-track:  #111827;
+    --scrollbar-thumb:  #334155;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    @apply font-sans antialiased;
+    min-height: 100vh;
+    transition: background-color 0.25s, color 0.25s;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 9999px; }
+}
+
+@layer components {
+  /* Glass card */
+  .card-glass {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    transition: background-color 0.25s, border-color 0.25s;
+  }
+
+  /* Primary CTA */
+  .btn-primary {
+    @apply font-semibold px-8 py-4 rounded-xl
+           shadow-lg transition-all duration-200
+           disabled:opacity-40 disabled:cursor-not-allowed;
+    background: linear-gradient(135deg, #0d9488, #14b8a6);
+    color: #fff;
+  }
+  .btn-primary:not(:disabled):hover {
+    background: linear-gradient(135deg, #14b8a6, #2dd4bf);
+    box-shadow: 0 8px 24px rgba(20,184,166,0.3);
+  }
+
+  /* Secondary outline */
+  .btn-secondary {
+    border: 1px solid var(--border);
+    color: var(--btn-sec-text);
+    @apply font-medium px-6 py-3 rounded-xl transition-all duration-200;
+  }
+  .btn-secondary:hover {
+    border-color: #14b8a6;
+    color: #14b8a6;
+  }
+
+  /* Disclaimer banner */
+  .disclaimer-banner {
+    background-color: var(--disclaimer-bg);
+    border: 1px solid var(--disclaimer-border);
+    color: var(--disclaimer-text);
+    @apply rounded-xl p-4 text-sm leading-relaxed;
+  }
+
+  /* Muted text */
+  .text-ui-muted  { color: var(--text-muted); }
+  .text-ui-subtle { color: var(--text-subtle); }
+  .border-ui      { border-color: var(--border); }
+  .bg-card        { background-color: var(--bg-card); }
+}

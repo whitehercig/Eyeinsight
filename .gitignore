@@ -1,0 +1,19 @@
+# Python runtime and local data
+backend/.venv/
+backend/.test-venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.db
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/features/*
+!backend/features/.gitkeep
+
+# Frontend build dependencies
+frontend/node_modules/
+frontend/dist/
+
+# Tooling and OS files
+.DS_Store
+.pytest_cache/
+.mypy_cache/
