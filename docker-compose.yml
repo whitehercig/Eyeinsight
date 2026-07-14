@@ -1,0 +1,19 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      EYEINSIGHT_CORS_ORIGINS: http://localhost:8080
+    volumes:
+      - eyeinsight-data:/data
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  eyeinsight-data:

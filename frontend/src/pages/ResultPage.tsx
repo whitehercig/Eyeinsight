@@ -15,7 +15,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { getFeatures, getResult, type AnalysisResult, type FeatureBundle } from "../api/client";
+import { deleteSession, getFeatures, getResult, type AnalysisResult, type FeatureBundle } from "../api/client";
 import { useApp } from "../context/AppContext";
 import {
   resolveSummary,
@@ -34,6 +34,8 @@ export default function ResultPage() {
 
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [features, setFeatures] = useState<FeatureBundle | null>(null);
+  const [featuresUnavailable, setFeaturesUnavailable] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,10 +43,12 @@ export default function ResultPage() {
 
   useEffect(() => {
     if (!sessionId) return;
-    Promise.all([getResult(sessionId), getFeatures(sessionId)])
-      .then(([analysis, featureBundle]) => {
+    getResult(sessionId)
+      .then((analysis) => {
         setResult(analysis);
-        setFeatures(featureBundle);
+        return getFeatures(sessionId)
+          .then(setFeatures)
+          .catch(() => setFeaturesUnavailable(true));
       })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
@@ -64,6 +68,19 @@ export default function ResultPage() {
   const qualityIssueTexts = result
     ? resolveQualityIssues(result.quality_issues, lang)
     : [];
+
+  async function handleDeleteSession() {
+    if (!sessionId || !window.confirm(t("result_delete_confirm"))) return;
+    setDeleting(true);
+    try {
+      await deleteSession(sessionId);
+      navigate("/", { replace: true });
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : String(deleteError));
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   // ── Loading state ─────────────────────────────────────────────────────────
 
@@ -215,6 +232,7 @@ export default function ResultPage() {
         {result.top_contributing_factors && result.top_contributing_factors.length > 0 && <div className="card-glass p-6 mt-4"><h3 className="font-semibold text-sm uppercase tracking-widest mb-3 text-ui-muted">{t("result_factors")}</h3><div className="space-y-2">{result.top_contributing_factors.map((factor) => <div key={factor.factor} className="flex justify-between text-sm text-ui-muted"><span>{factor.factor.replace(/_/g, " ")}</span><span className="font-mono">{factor.contribution.toFixed(1)}</span></div>)}</div>{result.risk_confidence !== null && result.risk_confidence !== undefined && <p className="text-xs text-ui-subtle mt-4">{result.risk_confidence_type?.replace(/_/g, " ")}: {result.risk_confidence.toFixed(0)}%</p>}</div>}
 
         {features && <><h3 className="font-semibold text-sm uppercase tracking-widest mt-6 text-ui-muted">{t("result_analysis")}</h3><FeatureCharts frames={features.frame_preview} phases={features.phase_features} labels={{ attention: t("chart_attention"), movement: t("chart_movement"), blink: t("chart_blink"), visibility: t("chart_visibility"), tracking: t("chart_tracking"), away: t("chart_away"), phases: t("chart_phases") }} /></>}
+        {featuresUnavailable && <p className="mt-4 text-xs text-ui-subtle">{t("result_features_unavailable")}</p>}
 
         {/* Recommendations — each code resolved to current language */}
         <div className="card-glass p-6 mt-4">
@@ -271,6 +289,9 @@ export default function ResultPage() {
         <p className="text-xs text-center mt-6 text-ui-subtle">
           {t("result_generated")}
         </p>
+        <button onClick={handleDeleteSession} disabled={deleting} className="block mx-auto mt-4 text-xs text-ui-subtle underline disabled:opacity-50">
+          {deleting ? t("result_deleting") : t("result_delete_data")}
+        </button>
       </div>
     </div>
   );

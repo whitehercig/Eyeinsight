@@ -26,6 +26,14 @@ npm run dev
 
 Open `http://localhost:5173`. The Vite development proxy forwards `/api` to FastAPI.
 
+### Run with Docker
+
+```bash
+docker compose up --build
+```
+
+Open `http://localhost:8080`. Docker keeps the SQLite database, uploaded videos, and generated features in the `eyeinsight-data` volume.
+
 ## Generated artifacts
 
 Each analysis writes to `backend/features/{session_id}/`:
@@ -45,6 +53,7 @@ The result page lets a user download each required CSV/JSON file. The data endpo
 - `GET /api/sessions/{session_id}/result`
 - `GET /api/sessions/{session_id}/features`
 - `GET /api/sessions/{session_id}/downloads/{filename}`
+- `DELETE /api/sessions/{session_id}` permanently removes the session video, generated artifacts, and database records.
 
 ## Scoring and safety
 

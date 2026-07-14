@@ -1,0 +1,7 @@
+.venv
+.test-venv
+__pycache__
+*.db
+uploads
+features
+ml/artifacts

@@ -1,7 +1,11 @@
+import os
+from pathlib import Path
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-DATABASE_URL = "sqlite:///./eyeinsight.db"
+BASE_DIR = Path(__file__).resolve().parent
+DATABASE_URL = os.getenv("EYEINSIGHT_DATABASE_URL", f"sqlite:///{BASE_DIR / 'eyeinsight.db'}")
 
 engine = create_engine(
     DATABASE_URL,

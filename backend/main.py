@@ -7,6 +7,8 @@ It does NOT diagnose any medical condition.
 All results are preliminary behavioral indicators.
 """
 
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,12 +28,11 @@ app = FastAPI(
 )
 
 # Allow the frontend (Vite dev server) to call the backend during development
+cors_origins = [origin.strip() for origin in os.getenv("EYEINSIGHT_CORS_ORIGINS", "http://localhost:5173,http://localhost:8080").split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite default
-        "http://localhost:3000",
-    ],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

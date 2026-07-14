@@ -78,3 +78,11 @@ export const getResult = (sessionId: string): Promise<AnalysisResult> =>
 
 export const getFeatures = (sessionId: string): Promise<FeatureBundle> =>
   request<FeatureBundle>(`/sessions/${sessionId}/features`);
+
+export const deleteSession = (sessionId: string): Promise<void> =>
+  fetch(`${BASE}/sessions/${sessionId}`, { method: "DELETE" }).then(async (response) => {
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.detail ?? `HTTP ${response.status}`);
+    }
+  });

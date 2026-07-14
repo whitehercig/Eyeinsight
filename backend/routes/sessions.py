@@ -5,20 +5,23 @@ Session management routes:
 """
 
 import os
+import shutil
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, File, status
 from sqlalchemy.orm import Session as DBSession
 import aiofiles
 
 from database import get_db
-from models import Session
+from models import AnalysisResult, Session
 from schemas import SessionResponse
+from services.video_feature_service import FEATURES_DIR
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
-UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+UPLOADS_DIR = os.path.join(os.getenv("EYEINSIGHT_DATA_DIR", BASE_DIR), "uploads")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 MAX_UPLOAD_BYTES = 80 * 1024 * 1024
 ALLOWED_SUFFIXES = {".webm", ".mp4", ".mov"}
@@ -35,6 +38,23 @@ def create_session(db: DBSession = Depends(get_db)):
     db.commit()
     db.refresh(session)
     return session
+
+
+@router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_session(session_id: str, db: DBSession = Depends(get_db)) -> Response:
+    """Permanently remove a session's video, feature artifacts, and database records."""
+    session = db.query(Session).filter(Session.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    result = db.query(AnalysisResult).filter(AnalysisResult.session_id == session_id).first()
+    if result:
+        db.delete(result)
+    if session.video_path and os.path.isfile(session.video_path):
+        os.remove(session.video_path)
+    shutil.rmtree(os.path.join(FEATURES_DIR, session_id), ignore_errors=True)
+    db.delete(session)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/{session_id}/upload-video", response_model=SessionResponse)

@@ -16,7 +16,8 @@ from services.video_quality_service import evaluate_frame_quality
 from services.vision_service import FaceMeshProcessor
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-FEATURES_DIR = os.path.join(BASE_DIR, "features")
+DATA_DIR = os.getenv("EYEINSIGHT_DATA_DIR", BASE_DIR)
+FEATURES_DIR = os.path.join(DATA_DIR, "features")
 os.makedirs(FEATURES_DIR, exist_ok=True)
 
 
