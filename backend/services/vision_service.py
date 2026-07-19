@@ -42,6 +42,16 @@ def _mean_point(points: np.ndarray, indexes: tuple[int, ...]) -> np.ndarray | No
     return np.mean(available, axis=0) if available else None
 
 
+def _normalize_pitch(angle: float) -> float:
+    """Map the equivalent 180° solvePnP representation to a frontal pitch."""
+    normalized = (angle + 180.0) % 360.0 - 180.0
+    if normalized > 90.0:
+        return 180.0 - normalized
+    if normalized < -90.0:
+        return -180.0 - normalized
+    return normalized
+
+
 @dataclass
 class TrackingState:
     previous_pose: np.ndarray | None = None
@@ -174,7 +184,8 @@ class FaceMeshProcessor:
             return 0.0, 0.0, 0.0
         matrix, _ = cv2.Rodrigues(rotation)
         angles, *_ = cv2.RQDecomp3x3(matrix)
-        pitch, yaw, roll = (float(angle) for angle in angles)
+        raw_pitch, yaw, roll = (float(angle) for angle in angles)
+        pitch = _normalize_pitch(raw_pitch)
         return yaw, pitch, roll
 
     def _motion(self, pose: np.ndarray, center: np.ndarray, timestamp: float) -> tuple[float, float, float]:
