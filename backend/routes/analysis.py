@@ -17,6 +17,7 @@ from database import get_db
 from models import AnalysisResult, Session
 from schemas import AnalysisResultResponse, FeatureBundleResponse
 from services.risk_model_service import score_from_session_features
+from services.report_service import create_clinical_report
 from services.video_feature_service import FEATURES_DIR, extract_video_features
 
 router = APIRouter(prefix="/api", tags=["analysis"])
@@ -71,11 +72,25 @@ def get_features(session_id: str, db: DBSession = Depends(get_db)) -> dict[str, 
     result = _result_or_404(session_id, db)
     paths = json.loads(result.feature_paths or "{}")
     phase_features = _read_csv(paths.get("phase_features"))
-    frame_preview = _read_csv(paths.get("frame_features"), 180)
+    frame_preview = _read_csv(paths.get("frame_features"), 240, sample=True)
     session_features = json.loads(result.session_features_json or "{}")
     explanation = json.loads(result.model_explanation or "{}")
     downloads = {name: f"/api/sessions/{session_id}/downloads/{name}" for name in ("frame_features.csv", "phase_features.csv", "session_features.csv", "session_features.json", "analysis_result.json")}
-    return {"session_id": session_id, "quality_metrics": json.loads(result.quality_metrics or "{}"), "frame_preview": frame_preview, "frame_features": frame_preview, "phase_features": phase_features, "session_features": session_features, "attention_score": session_features.get("attention_score"), "attention_level": session_features.get("attention_level"), "risk_score": result.risk_score, "risk_level": result.risk_level, "risk_details": explanation, "downloads": downloads, "medical_disclaimer": "EyeInsight is an AI-assisted behavioral screening support tool. It does not diagnose any condition."}
+    downloads["clinical_report.pdf"] = f"/api/sessions/{session_id}/clinical-report?lang=ru"
+    return {"session_id": session_id, "quality_metrics": json.loads(result.quality_metrics or "{}"), "frame_preview": frame_preview, "frame_features": frame_preview, "phase_features": phase_features, "session_features": session_features, "attention_score": session_features.get("attention_score"), "attention_level": session_features.get("attention_level"), "risk_score": result.risk_score, "risk_level": result.risk_level, "risk_details": explanation, "visualizations": session_features.get("visualization_data", {}), "downloads": downloads, "medical_disclaimer": "EyeInsight is an AI-assisted behavioral screening support tool. It does not diagnose any condition."}
+
+
+@router.get("/sessions/{session_id}/clinical-report")
+def clinical_report(session_id: str, lang: str = "ru", db: DBSession = Depends(get_db)) -> FileResponse:
+    if lang not in {"en", "ru", "kz"}:
+        raise HTTPException(status_code=422, detail="Supported report languages: en, ru, kz")
+    result = _result_or_404(session_id, db)
+    paths = json.loads(result.feature_paths or "{}")
+    phase_features = _read_csv(paths.get("phase_features"))
+    session_features = json.loads(result.session_features_json or "{}")
+    output_path = Path(FEATURES_DIR) / session_id / f"clinical_report_{lang}.pdf"
+    create_clinical_report(output_path, session_id, _serialize(result), session_features, phase_features, lang)
+    return FileResponse(output_path, media_type="application/pdf", filename=f"eyeinsight_clinical_report_{session_id[:8]}.pdf")
 
 
 @router.get("/sessions/{session_id}/downloads/{filename}")
@@ -98,10 +113,12 @@ def _result_or_404(session_id: str, db: DBSession) -> AnalysisResult:
     return result
 
 
-def _read_csv(path: str | None, limit: int | None = None) -> list[dict[str, Any]]:
+def _read_csv(path: str | None, limit: int | None = None, sample: bool = False) -> list[dict[str, Any]]:
     if not path or not os.path.isfile(path):
         return []
-    frame = pd.read_csv(path, nrows=limit)
+    frame = pd.read_csv(path)
+    if limit and len(frame) > limit:
+        frame = frame.iloc[np.linspace(0, len(frame) - 1, limit).astype(int)] if sample else frame.head(limit)
     frame = frame.replace({np.nan: None})
     return frame.to_dict("records")
 

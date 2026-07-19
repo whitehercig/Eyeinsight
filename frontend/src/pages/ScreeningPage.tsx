@@ -38,7 +38,7 @@ function ColorfulObject() {
   return (
     <div className="w-full h-full relative" style={{ background: "var(--bg-card)" }}>
       <div className="absolute w-16 h-16 rounded-2xl shadow-lg"
-        style={{ background: "linear-gradient(135deg,#7c3aed,#db2777)", animation: "jumpSides 2s step-end infinite" }}/>
+        style={{ top: "calc(50% - 2rem)", background: "linear-gradient(135deg,#7c3aed,#db2777)", animation: "jumpSides 2s step-end infinite" }}/>
       <style>{`@keyframes jumpSides { 0%,50%{left:10%} 51%,100%{left:74%} }`}</style>
     </div>
   );

@@ -56,5 +56,6 @@ class FeatureBundleResponse(BaseModel):
     risk_score: Optional[float] = None
     risk_level: Optional[str] = None
     risk_details: Dict[str, Any]
+    visualizations: Dict[str, Any] = {}
     downloads: Dict[str, str]
     medical_disclaimer: str

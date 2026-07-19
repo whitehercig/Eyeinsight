@@ -42,6 +42,7 @@ Each analysis writes to `backend/features/{session_id}/`:
 - `phase_features.csv` — descriptive, fixation, motion, blink, gaze, and reaction aggregates per stimulus phase.
 - `session_features.csv` and `session_features.json` — session-level inputs for inference.
 - `analysis_result.json` — persisted API result suitable for export.
+- `clinical_report_{language}.pdf` — one-page clinician-oriented summary generated on request. It includes technical data quality, descriptive attention indicators, and phase-level screen-gaze proxy values.
 
 The result page lets a user download each required CSV/JSON file. The data endpoint is `GET /api/sessions/{session_id}/features`; artifact downloads are `GET /api/sessions/{session_id}/downloads/{filename}`.
 
@@ -53,10 +54,11 @@ The result page lets a user download each required CSV/JSON file. The data endpo
 - `GET /api/sessions/{session_id}/result`
 - `GET /api/sessions/{session_id}/features`
 - `GET /api/sessions/{session_id}/downloads/{filename}`
+- `GET /api/sessions/{session_id}/clinical-report?lang=ru` (`ru`, `kz`, or `en`)
 - `DELETE /api/sessions/{session_id}` permanently removes the session video, generated artifacts, and database records.
 
 ## Scoring and safety
 
 The attention score is a deterministic weighted combination of tracking quality, face visibility, head/gaze stability, center fixation, looking-away ratio, phase consistency, and usable frames. The risk-like screening indicator is a deterministic, transparent rule set over these aggregates. Its displayed confidence is only **technical input reliability**, never diagnostic or clinical confidence.
 
-A low-quality recording receives no risk score. Any output remains a preliminary screening indicator and must be interpreted with a qualified professional when concerns exist.
+A low-quality recording receives no risk score. Any output remains a preliminary screening indicator and must be interpreted with a qualified professional when concerns exist. The heatmap, gaze path, target alignment, and response latency are **uncalibrated technical proxies**, not clinical eye-tracking measurements and not diagnostic evidence.

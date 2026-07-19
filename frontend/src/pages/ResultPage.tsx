@@ -25,6 +25,7 @@ import {
 import RiskCard from "../components/RiskCard";
 import Navbar from "../components/Navbar";
 import FeatureCharts from "../components/FeatureCharts";
+import GazeVisualizations from "../components/GazeVisualizations";
 
 export default function ResultPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -231,7 +232,7 @@ export default function ResultPage() {
 
         {result.top_contributing_factors && result.top_contributing_factors.length > 0 && <div className="card-glass p-6 mt-4"><h3 className="font-semibold text-sm uppercase tracking-widest mb-3 text-ui-muted">{t("result_factors")}</h3><div className="space-y-2">{result.top_contributing_factors.map((factor) => <div key={factor.factor} className="flex justify-between text-sm text-ui-muted"><span>{factor.factor.replace(/_/g, " ")}</span><span className="font-mono">{factor.contribution.toFixed(1)}</span></div>)}</div>{result.risk_confidence !== null && result.risk_confidence !== undefined && <p className="text-xs text-ui-subtle mt-4">{result.risk_confidence_type?.replace(/_/g, " ")}: {result.risk_confidence.toFixed(0)}%</p>}</div>}
 
-        {features && <><h3 className="font-semibold text-sm uppercase tracking-widest mt-6 text-ui-muted">{t("result_analysis")}</h3><FeatureCharts frames={features.frame_preview} phases={features.phase_features} labels={{ attention: t("chart_attention"), movement: t("chart_movement"), blink: t("chart_blink"), visibility: t("chart_visibility"), tracking: t("chart_tracking"), away: t("chart_away"), phases: t("chart_phases"), phaseNames: { center_focus: t("phase1_label"), horizontal_tracking: t("phase2_label"), vertical_tracking: t("phase3_label"), social_face: t("phase4_label"), attention_shift: t("phase5_label"), final_center: t("phase6_label") } }} /></>}
+        {features && <><h3 className="font-semibold text-sm uppercase tracking-widest mt-6 text-ui-muted">{t("result_analysis")}</h3><FeatureCharts frames={features.frame_preview} phases={features.phase_features} labels={{ attention: t("chart_attention"), movement: t("chart_movement"), blink: t("chart_blink"), visibility: t("chart_visibility"), tracking: t("chart_tracking"), away: t("chart_away"), phases: t("chart_phases"), phaseNames: { center_focus: t("phase1_label"), horizontal_tracking: t("phase2_label"), vertical_tracking: t("phase3_label"), social_face: t("phase4_label"), attention_shift: t("phase5_label"), final_center: t("phase6_label") } }} /><GazeVisualizations visualizations={features.visualizations} labels={{ heatmap: t("gaze_heatmap_title"), path: t("gaze_path_title"), proxy: t("gaze_proxy_note"), gaze: t("gaze_path_gaze"), target: t("gaze_path_target") }} /></>}
         {featuresUnavailable && <p className="mt-4 text-xs text-ui-subtle">{t("result_features_unavailable")}</p>}
 
         {/* Recommendations — each code resolved to current language */}

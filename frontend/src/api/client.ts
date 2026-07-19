@@ -46,6 +46,17 @@ export interface FeatureBundle {
   session_features: Record<string, unknown>;
   attention_score: number | null;
   attention_level: string | null;
+  visualizations: {
+    gaze_heatmap?: number[][];
+    gaze_path?: {
+      timestamp: number;
+      gaze_screen_x: number;
+      gaze_screen_y: number;
+      target_screen_x: number;
+      target_screen_y: number;
+      target_aligned: number;
+    }[];
+  };
   downloads: Record<string, string>;
 }
 
