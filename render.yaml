@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: eyeinsight-mvp
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: EYEINSIGHT_CORS_ORIGINS
+        value: https://eyeinsight-mvp.onrender.com

@@ -8,9 +8,11 @@ All results are preliminary behavioral indicators.
 """
 
 import os
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from database import engine, Base
 from routes import sessions, analysis
@@ -47,3 +49,18 @@ app.include_router(analysis.router)
 def health_check():
     """Simple liveness probe."""
     return {"status": "ok"}
+
+
+static_dir = Path(os.getenv("EYEINSIGHT_STATIC_DIR", ""))
+index_file = static_dir / "index.html"
+
+
+if index_file.is_file():
+    @app.get("/{path:path}", include_in_schema=False)
+    def serve_frontend(path: str) -> FileResponse:
+        if path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="API endpoint not found")
+        requested_file = static_dir / path
+        if path and requested_file.is_file():
+            return FileResponse(requested_file)
+        return FileResponse(index_file)

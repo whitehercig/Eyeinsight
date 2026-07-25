@@ -26,6 +26,12 @@ npm run dev
 
 Open `http://localhost:5173`. The Vite development proxy forwards `/api` to FastAPI.
 
+## Deploy free on Render
+
+The repository includes a single-service `render.yaml`: it builds the React frontend and serves it from FastAPI on the same public URL. In Render, select **New → Blueprint**, connect `whitehercig/Eyeinsight`, and choose the `main` branch. The health check is `/api/health`.
+
+This configuration is suitable for a public MVP demo only. Render free services can take about a minute to wake after inactivity and their local SQLite database, uploaded videos, and generated files are erased on restart or sleep. Do not use this deployment to store clinical or personal data.
+
 ### Run with Docker
 
 ```bash
