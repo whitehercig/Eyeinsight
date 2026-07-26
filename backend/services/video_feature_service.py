@@ -29,6 +29,22 @@ def _number(value: Any, default: float = 0.0) -> float:
         return default
 
 
+def _analysis_sampling_interval(source_fps: float) -> int:
+    """Limit expensive face-mesh inference only when a deployment opts in."""
+    target_fps = _number(os.getenv("EYEINSIGHT_MAX_ANALYSIS_FPS"), 0.0)
+    if source_fps <= 0 or target_fps <= 0:
+        return 1
+    return max(1, math.ceil(source_fps / target_fps))
+
+
+def _analysis_frame(frame: np.ndarray) -> np.ndarray:
+    target_width = int(_number(os.getenv("EYEINSIGHT_ANALYSIS_WIDTH"), 0.0))
+    if target_width <= 0 or frame.shape[1] <= target_width:
+        return frame
+    target_height = max(1, round(frame.shape[0] * target_width / frame.shape[1]))
+    return cv2.resize(frame, (target_width, target_height), interpolation=cv2.INTER_AREA)
+
+
 def _describe(values: pd.Series) -> dict[str, float]:
     values = pd.to_numeric(values, errors="coerce").dropna()
     if values.empty:
@@ -93,15 +109,19 @@ def extract_video_features(video_path: str, session_id: str, output_dir: str | N
     rows: list[dict[str, Any]] = []
     capture = cv2.VideoCapture(video_path)
     frame_index, decoded = 0, 0
+    sampling_interval = _analysis_sampling_interval(metadata["fps"])
     with FaceMeshProcessor() as processor:
         while True:
             ok, frame = capture.read()
             if not ok or frame is None:
                 break
-            decoded += 1
             timestamp = frame_index / metadata["fps"] if metadata["fps"] > 0 else float(frame_index)
+            if frame_index % sampling_interval:
+                frame_index += 1
+                continue
+            decoded += 1
             phase = get_phase_at(timestamp)
-            mesh = processor.process(frame, timestamp)
+            mesh = processor.process(_analysis_frame(frame), timestamp)
             quality = _frame_quality(frame, mesh)
             gaze_target = _gaze_target_proxy(mesh, get_target_at(timestamp))
             rows.append({
@@ -122,8 +142,9 @@ def extract_video_features(video_path: str, session_id: str, output_dir: str | N
         raise ValueError("video_decode_failed")
     frame_df = pd.DataFrame(rows)
     duration = frame_df["timestamp"].iloc[-1] if metadata["fps"] > 0 else float(len(frame_df))
-    expected = int(round(metadata["fps"] * duration)) if metadata["fps"] > 0 else decoded
-    quality_assessment = evaluate_frame_quality(frame_df, metadata["fps"], duration, decoded, expected)
+    metadata["analysis_fps"] = round(metadata["fps"] / sampling_interval, 3) if metadata["fps"] > 0 else 0.0
+    metadata["analysis_sampling_interval"] = sampling_interval
+    quality_assessment = evaluate_frame_quality(frame_df, metadata["fps"], duration, decoded, decoded)
     frame_df["quality_score"] = quality_assessment["quality_score"]
     frame_path = os.path.join(output_dir, "frame_features.csv")
     frame_df.to_csv(frame_path, index=False)
@@ -179,7 +200,7 @@ def _aggregate_session(session_id: str, frame_df: pd.DataFrame, phase_df: pd.Dat
     reaction_values = phase_df["reaction_latency_sec"].dropna() if "reaction_latency_sec" in phase_df else pd.Series(dtype=float)
     response_values = phase_df["estimated_response_latency_ms"].dropna() if "estimated_response_latency_ms" in phase_df else pd.Series(dtype=float)
     estimated_response_latency = round(float(response_values.mean()), 1) if not response_values.empty else None
-    features: dict[str, Any] = {"session_id": session_id, "session_duration_sec": round(float(duration), 3), "fps": round(metadata["fps"], 3), "total_frames": int(len(frame_df)), "overall_attention": attention_score, "attention_score": attention_score, "attention_level": attention_level, "overall_tracking_quality": round(attention_components["tracking_quality"], 5), "overall_gaze_stability": round(attention_components["gaze_stability"], 5), "overall_head_stability": round(attention_components["head_stability"], 5), "overall_blink_rate": round(float(source["blink"].sum()) / max(duration, 1) * 60, 3), "overall_face_visibility": round(attention_components["face_visibility"], 5), "overall_eyes_visibility": round(_number(((source["left_eye_detected"] + source["right_eye_detected"]) > 0).mean()), 5), "overall_usable_frames": round(attention_components["usable_frames"], 5), "overall_quality_score": quality["quality_score"], "overall_looking_away_ratio": round(_number(away.mean()), 5), "overall_center_fixation": round(attention_components["center_fixation"], 5), "overall_target_alignment_proxy": round(_number(source["target_aligned"].mean()), 5), "estimated_response_latency_ms": estimated_response_latency, "head_movement_mean": round(_number(source["head_motion"].mean()), 5), "reaction_latency_mean_sec": round(_number(reaction_values.mean()), 4), "reaction_latency_std_sec": round(_number(reaction_values.std()), 4), "quality_metrics": quality["metrics"], "quality_fail_reasons": quality["issues"], "visualization_data": _visualization_data(source), "score_breakdown": {key: round(value * 100, 1) for key, value in attention_components.items()}, "score_explanation": "Weighted technical attention indicators: tracking, face visibility, head and gaze stability, center fixation, phase consistency, and usable frames.", "extractor_version": "mediapipe_face_mesh_v3_stimulus_proxy", "medical_note": "screening_support_only_not_diagnostic"}
+    features: dict[str, Any] = {"session_id": session_id, "session_duration_sec": round(float(duration), 3), "fps": round(metadata["fps"], 3), "analysis_fps": metadata.get("analysis_fps", round(metadata["fps"], 3)), "analysis_sampling_interval": metadata.get("analysis_sampling_interval", 1), "total_frames": int(len(frame_df)), "overall_attention": attention_score, "attention_score": attention_score, "attention_level": attention_level, "overall_tracking_quality": round(attention_components["tracking_quality"], 5), "overall_gaze_stability": round(attention_components["gaze_stability"], 5), "overall_head_stability": round(attention_components["head_stability"], 5), "overall_blink_rate": round(float(source["blink"].sum()) / max(duration, 1) * 60, 3), "overall_face_visibility": round(attention_components["face_visibility"], 5), "overall_eyes_visibility": round(_number(((source["left_eye_detected"] + source["right_eye_detected"]) > 0).mean()), 5), "overall_usable_frames": round(attention_components["usable_frames"], 5), "overall_quality_score": quality["quality_score"], "overall_looking_away_ratio": round(_number(away.mean()), 5), "overall_center_fixation": round(attention_components["center_fixation"], 5), "overall_target_alignment_proxy": round(_number(source["target_aligned"].mean()), 5), "estimated_response_latency_ms": estimated_response_latency, "head_movement_mean": round(_number(source["head_motion"].mean()), 5), "reaction_latency_mean_sec": round(_number(reaction_values.mean()), 4), "reaction_latency_std_sec": round(_number(reaction_values.std()), 4), "quality_metrics": quality["metrics"], "quality_fail_reasons": quality["issues"], "visualization_data": _visualization_data(source), "score_breakdown": {key: round(value * 100, 1) for key, value in attention_components.items()}, "score_explanation": "Weighted technical attention indicators: tracking, face visibility, head and gaze stability, center fixation, phase consistency, and usable frames.", "extractor_version": "mediapipe_face_mesh_v3_stimulus_proxy", "medical_note": "screening_support_only_not_diagnostic"}
     for _, row in phase_df.iterrows():
         prefix = str(row["phase"])
         features[f"{prefix}_attention_ratio"] = _number(row["attention_ratio"])

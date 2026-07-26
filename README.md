@@ -30,7 +30,7 @@ Open `http://localhost:5173`. The Vite development proxy forwards `/api` to Fast
 
 The repository includes a single-service `render.yaml`: it builds the React frontend and serves it from FastAPI on the same public URL. In Render, select **New → Blueprint**, connect `whitehercig/Eyeinsight`, and choose the `main` branch. The health check is `/api/health`.
 
-This configuration is suitable for a public MVP demo only. Render free services can take about a minute to wake after inactivity and their local SQLite database, uploaded videos, and generated files are erased on restart or sleep. Do not use this deployment to store clinical or personal data.
+This configuration is suitable for a public MVP demo only. Render free services can take about a minute to wake after inactivity and their local SQLite database, uploaded videos, and generated files are erased on restart or sleep. The Docker deployment samples video at up to 4 FPS and resizes frames to 320 px before Face Mesh inference to fit the free CPU tier; local runs retain full-frame processing by default. Do not use this deployment to store clinical or personal data.
 
 ### Run with Docker
 
