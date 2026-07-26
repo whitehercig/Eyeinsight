@@ -56,7 +56,7 @@ index_file = static_dir / "index.html"
 
 
 if index_file.is_file():
-    @app.get("/{path:path}", include_in_schema=False)
+    @app.api_route("/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)
     def serve_frontend(path: str) -> FileResponse:
         if path.startswith("api/"):
             raise HTTPException(status_code=404, detail="API endpoint not found")
