@@ -4,7 +4,7 @@
  * - Eye outline with teal/cyan gradient bottom lid
  * - Targeting crosshair pupil
  * - Orbital tracking dots + arc
- * - "EyeInsight" wordmark (Eye in white, Insight in teal gradient)
+ * - Adaptive wordmark that remains visible in both themes
  */
 
 interface Props {
@@ -42,10 +42,10 @@ export default function EyeInsightLogo({
         </linearGradient>
       </defs>
 
-      {/* Upper eyelid — white */}
+      {/* Upper eyelid — theme-aware */}
       <path
         d="M10 42 C30 12, 90 12, 110 42"
-        stroke="white"
+        stroke="var(--logo-ink)"
         strokeWidth="3"
         fill="none"
         strokeLinecap="round"
@@ -60,17 +60,17 @@ export default function EyeInsightLogo({
         strokeLinecap="round"
       />
 
-      {/* Outer iris circle — white */}
-      <circle cx="60" cy="42" r="20" stroke="white" strokeWidth="2.5" fill="none" />
+      {/* Outer iris circle — theme-aware */}
+      <circle cx="60" cy="42" r="20" stroke="var(--logo-ink)" strokeWidth="2.5" fill="none" />
 
-      {/* Inner pupil circle — white */}
-      <circle cx="60" cy="42" r="10" stroke="white" strokeWidth="2" fill="none" />
+      {/* Inner pupil circle — theme-aware */}
+      <circle cx="60" cy="42" r="10" stroke="var(--logo-ink)" strokeWidth="2" fill="none" />
 
-      {/* Crosshair — white */}
-      <line x1="60" y1="22" x2="60" y2="28" stroke="white" strokeWidth="2" strokeLinecap="round" />
-      <line x1="60" y1="56" x2="60" y2="62" stroke="white" strokeWidth="2" strokeLinecap="round" />
-      <line x1="40" y1="42" x2="46" y2="42" stroke="white" strokeWidth="2" strokeLinecap="round" />
-      <line x1="74" y1="42" x2="80" y2="42" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      {/* Crosshair — theme-aware */}
+      <line x1="60" y1="22" x2="60" y2="28" stroke="var(--logo-ink)" strokeWidth="2" strokeLinecap="round" />
+      <line x1="60" y1="56" x2="60" y2="62" stroke="var(--logo-ink)" strokeWidth="2" strokeLinecap="round" />
+      <line x1="40" y1="42" x2="46" y2="42" stroke="var(--logo-ink)" strokeWidth="2" strokeLinecap="round" />
+      <line x1="74" y1="42" x2="80" y2="42" stroke="var(--logo-ink)" strokeWidth="2" strokeLinecap="round" />
 
       {/* Center dot — teal */}
       <circle cx="60" cy="42" r="3.5" fill="#00b4d8" />
@@ -107,7 +107,7 @@ export default function EyeInsightLogo({
       style={{ fontSize: size * 0.38 }}
       className="font-bold tracking-tight select-none leading-none"
     >
-      <span className="text-white">Eye</span>
+      <span style={{ color: "var(--logo-wordmark)" }}>Eye</span>
       <span
         style={{
           background: "linear-gradient(90deg, #00b4d8, #90e0ef)",

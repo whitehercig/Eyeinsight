@@ -7,18 +7,26 @@
 
   /* ── LIGHT theme (default) ── */
   :root {
-    --bg:          #f8fafc;
+    --bg:          #f3f7fb;
     --bg-card:     #ffffff;
-    --border:      #e2e8f0;
-    --text:        #0f172a;
-    --text-muted:  #64748b;
-    --text-subtle: #94a3b8;
-    --btn-sec-text:#475569;
-    --disclaimer-bg:  rgba(245,158,11,0.08);
-    --disclaimer-border: rgba(245,158,11,0.35);
-    --disclaimer-text:   #b45309;
-    --scrollbar-track:  #e2e8f0;
-    --scrollbar-thumb:  #cbd5e1;
+    --border:      #d6e2ee;
+    --text:        #10233f;
+    --text-muted:  #4b607a;
+    --text-subtle: #71829a;
+    --btn-sec-text:#36516f;
+    --logo-ink:    #0f766e;
+    --logo-wordmark: #10233f;
+    --nav-bg:      rgba(255,255,255,0.86);
+    --nav-shadow:  0 1px 0 rgba(15,35,63,0.05), 0 8px 24px rgba(15,35,63,0.04);
+    --card-shadow: 0 10px 28px rgba(15,35,63,0.055);
+    --chart-surface: #f8fafc;
+    --chart-grid:  rgba(71,85,105,0.20);
+    --meter-track: #e3ebf3;
+    --disclaimer-bg:  #fff8e8;
+    --disclaimer-border: #f4cd7d;
+    --disclaimer-text:   #925e08;
+    --scrollbar-track:  #e7eef5;
+    --scrollbar-thumb:  #b4c4d6;
   }
 
   /* ── DARK theme ── */
@@ -30,6 +38,14 @@
     --text-muted:  #94a3b8;
     --text-subtle: #475569;
     --btn-sec-text:#94a3b8;
+    --logo-ink:    #f8fafc;
+    --logo-wordmark: #f8fafc;
+    --nav-bg:      rgba(11,17,32,0.86);
+    --nav-shadow:  0 1px 0 rgba(148,163,184,0.10);
+    --card-shadow: none;
+    --chart-surface: rgba(15,23,42,0.42);
+    --chart-grid:  rgba(148,163,184,0.15);
+    --meter-track: #1e293b;
     --disclaimer-bg:   rgba(245,158,11,0.05);
     --disclaimer-border: rgba(245,158,11,0.25);
     --disclaimer-text:   #f59e0b;
@@ -41,6 +57,7 @@
 
   body {
     background-color: var(--bg);
+    background-image: radial-gradient(circle at 8% -8%, rgba(45,212,191,0.12), transparent 27rem), radial-gradient(circle at 94% 6%, rgba(59,130,246,0.08), transparent 22rem);
     color: var(--text);
     @apply font-sans antialiased;
     min-height: 100vh;
@@ -58,6 +75,7 @@
     background-color: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 1rem;
+    box-shadow: var(--card-shadow);
     transition: background-color 0.25s, border-color 0.25s;
   }
 
@@ -98,4 +116,41 @@
   .text-ui-subtle { color: var(--text-subtle); }
   .border-ui      { border-color: var(--border); }
   .bg-card        { background-color: var(--bg-card); }
+
+  .navbar {
+    background: var(--nav-bg);
+    border-color: var(--border);
+    box-shadow: var(--nav-shadow);
+    backdrop-filter: blur(18px);
+  }
+
+  .nav-badge, .nav-control {
+    border-color: var(--border);
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--bg-card) 72%, transparent);
+  }
+
+  .nav-control:hover { border-color: #14b8a6; color: #0d9488; }
+
+  .camera-guide-oval {
+    width: clamp(130px, 34%, 220px);
+    height: clamp(185px, 67%, 300px);
+    border: 2px solid rgba(45, 212, 191, 0.95);
+    border-radius: 48% 48% 45% 45%;
+    box-shadow: 0 0 0 999px rgba(5, 15, 30, 0.12), 0 0 28px rgba(45, 212, 191, 0.34), inset 0 0 28px rgba(45, 212, 191, 0.10);
+  }
+
+  .camera-guide-corners {
+    width: clamp(154px, 40%, 252px);
+    height: clamp(210px, 76%, 332px);
+    background: linear-gradient(#5eead4, #5eead4) left top / 32px 3px no-repeat,
+                linear-gradient(#5eead4, #5eead4) left top / 3px 32px no-repeat,
+                linear-gradient(#5eead4, #5eead4) right top / 32px 3px no-repeat,
+                linear-gradient(#5eead4, #5eead4) right top / 3px 32px no-repeat,
+                linear-gradient(#5eead4, #5eead4) left bottom / 32px 3px no-repeat,
+                linear-gradient(#5eead4, #5eead4) left bottom / 3px 32px no-repeat,
+                linear-gradient(#5eead4, #5eead4) right bottom / 32px 3px no-repeat,
+                linear-gradient(#5eead4, #5eead4) right bottom / 3px 32px no-repeat;
+    opacity: 0.9;
+  }
 }

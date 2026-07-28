@@ -46,7 +46,7 @@ export default function FeatureCharts({ frames, phases, labels }: Props) {
         </svg>
         {selected && <span className="absolute top-1 right-1 text-xs font-mono text-ui-muted">{selected.time.toFixed(1)}s · {(selected.y * 100).toFixed(0)}%</span>}
       </div>
-      {phases.length > 0 && <div className="mt-6"><p className="text-xs uppercase tracking-widest text-ui-subtle mb-3">{labels.phases}</p><div className="space-y-2">{phases.map((phase) => { const ratio = Math.max(0, Math.min(1, Number(phase.attention_ratio ?? 0))); const phaseName = String(phase.phase); return <div key={phaseName} className="flex items-center gap-3 text-xs"><span className="w-28 truncate text-ui-muted">{labels.phaseNames[phaseName] ?? phaseName}</span><div className="flex-1 h-2 rounded bg-slate-700/40"><div className="h-full rounded bg-teal-500" style={{ width: `${ratio * 100}%` }} /></div><span className="w-8 text-right text-ui-muted">{(ratio * 100).toFixed(0)}%</span></div>; })}</div></div>}
+      {phases.length > 0 && <div className="mt-6"><p className="text-xs uppercase tracking-widest text-ui-subtle mb-3">{labels.phases}</p><div className="space-y-2">{phases.map((phase) => { const ratio = Math.max(0, Math.min(1, Number(phase.attention_ratio ?? 0))); const phaseName = String(phase.phase); return <div key={phaseName} className="flex items-center gap-3 text-xs"><span className="w-28 truncate text-ui-muted">{labels.phaseNames[phaseName] ?? phaseName}</span><div className="flex-1 h-2 rounded" style={{ background: "var(--meter-track)" }}><div className="h-full rounded bg-teal-500" style={{ width: `${ratio * 100}%` }} /></div><span className="w-8 text-right text-ui-muted">{(ratio * 100).toFixed(0)}%</span></div>; })}</div></div>}
     </div>
   );
 }

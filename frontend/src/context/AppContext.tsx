@@ -24,7 +24,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   });
 
   const [theme, setTheme] = useState<Theme>(() => {
-    return (localStorage.getItem("ei_theme") as Theme) ?? "dark";
+    return (localStorage.getItem("ei_theme") as Theme) ?? "light";
   });
 
   // Apply theme class to <html> for Tailwind dark mode

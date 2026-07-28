@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useRef, useState, useImperativeHandle, forwardRef } from "react";
+import { useApp } from "../context/AppContext";
 
 export interface CameraRecorderHandle {
   startRecording: () => void;
@@ -24,6 +25,7 @@ const CameraRecorder = forwardRef<CameraRecorderHandle, Props>(
     const recorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
     const [isRecording, setIsRecording] = useState(false);
+    const { t } = useApp();
 
     useEffect(() => {
       let mounted = true;
@@ -98,7 +100,7 @@ const CameraRecorder = forwardRef<CameraRecorderHandle, Props>(
     }));
 
     return (
-      <div className="relative w-full rounded-2xl overflow-hidden border border-slate-800 bg-black">
+      <div className="relative w-full rounded-2xl overflow-hidden border border-slate-800 bg-black shadow-xl shadow-slate-950/20">
         <video
           ref={videoRef}
           autoPlay
@@ -106,6 +108,13 @@ const CameraRecorder = forwardRef<CameraRecorderHandle, Props>(
           muted
           className="w-full aspect-video object-cover scale-x-[-1]" // Mirror for natural selfie feel
         />
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center" aria-hidden="true">
+          <div className="camera-guide-oval absolute" />
+          <div className="camera-guide-corners absolute" />
+          <div className="absolute bottom-4 rounded-full border border-teal-300/40 bg-slate-950/65 px-3 py-1.5 text-center text-xs font-medium text-teal-50 backdrop-blur-sm">
+            {t("camera_face_guide")}
+          </div>
+        </div>
         {isRecording && (
           <div className="absolute top-3 right-3 flex items-center gap-2 bg-black/60 px-3 py-1.5 rounded-full">
             <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
