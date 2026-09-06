@@ -9,18 +9,25 @@ class SessionResponse(BaseModel):
     id: str
     created_at: datetime
     status: str
-    video_path: Optional[str] = None
     model_config = {"from_attributes": True}
+
+
+class CameraReadinessResponse(BaseModel):
+    ready: bool
+    checks: Dict[str, bool]
+    issues: List[str]
+    metrics: Dict[str, float]
 
 
 class AnalysisResultResponse(BaseModel):
     """
     All text fields are CODES — the frontend translates them.
-    No human-readable strings are returned by the backend.
+    Legacy risk fields remain nullable for API compatibility. The current
+    research-prototype pipeline does not generate a clinical risk estimate.
     """
     session_id: str
-    risk_score: Optional[float]          # None when quality_failed
-    risk_level: Optional[str]            # "low" | "moderate" | "elevated" | None
+    risk_score: Optional[float]          # always None in the current prototype
+    risk_level: Optional[str]            # always None in the current prototype
     quality_score: float
     quality_failed: bool
     quality_issues: List[str]            # codes: ["lighting_low", ...]
@@ -34,8 +41,10 @@ class AnalysisResultResponse(BaseModel):
     risk_confidence_type: Optional[str] = None
     top_contributing_factors: List[Dict[str, Any]] = []
     model_version: Optional[str] = None
-    summary_code: str                    # e.g. "low_risk_summary"
-    recommendation_codes: List[str]      # e.g. ["not_diagnosis", "consult_specialist"]
+    summary_code: str                    # e.g. "technical_session_complete"
+    recommendation_codes: List[str]      # e.g. ["not_diagnosis"]
+    source_video_deleted: bool = False
+    is_demo: bool = False
     created_at: datetime
     model_config = {"from_attributes": True}
 

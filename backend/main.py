@@ -2,9 +2,8 @@
 EyeInsight Backend — FastAPI application entry point.
 
 IMPORTANT MEDICAL DISCLAIMER:
-EyeInsight is a SCREENING SUPPORT TOOL only.
-It does NOT diagnose any medical condition.
-All results are preliminary behavioral indicators.
+EyeInsight is an unvalidated research prototype.
+It does NOT diagnose any medical condition or estimate clinical risk.
 """
 
 import os
@@ -15,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from database import engine, Base
-from routes import sessions, analysis
+from routes import analysis, camera, sessions
 
 # Create all DB tables on startup
 Base.metadata.create_all(bind=engine)
@@ -23,10 +22,10 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="EyeInsight API",
     description=(
-        "Backend for EyeInsight — an AI-powered developmental screening support tool. "
-        "NOT a diagnostic system. Results are preliminary only."
+        "Backend for EyeInsight — a camera-based visual-attention research prototype. "
+        "It provides descriptive technical metrics, not diagnoses or clinical risk estimates."
     ),
-    version="0.5.0",
+    version="0.6.0",
 )
 
 # Allow the frontend (Vite dev server) to call the backend during development
@@ -43,6 +42,7 @@ app.add_middleware(
 # Register routers
 app.include_router(sessions.router)
 app.include_router(analysis.router)
+app.include_router(camera.router)
 
 
 @app.get("/api/health")

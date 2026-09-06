@@ -8,7 +8,7 @@ from database import Base
 
 
 class Session(Base):
-    """Screening session lifecycle: created → uploaded → analyzed."""
+    """Session lifecycle: created → uploaded → processing → analyzed/quality_failed."""
     __tablename__ = "sessions"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
@@ -26,20 +26,20 @@ class AnalysisResult(Base):
     Stores ML analysis output as CODES — no human-readable text.
     The frontend translates all codes into the user's chosen language.
 
-    NOTE: screening data only — NOT a diagnosis.
+    NOTE: research-prototype data only — NOT a diagnosis or clinical risk score.
     """
     __tablename__ = "analysis_results"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     session_id: Mapped[str] = mapped_column(String, ForeignKey("sessions.id"))
 
-    # Numeric scores (nullable when quality_failed=True)
+    # Legacy nullable risk fields are retained for database compatibility.
     risk_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     quality_score: Mapped[float] = mapped_column(Float)
 
     # Enum codes — frontend maps to translated text
     risk_level: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # low|moderate|elevated|None
-    summary_code: Mapped[str] = mapped_column(String)                         # e.g. "low_risk_summary"
+    summary_code: Mapped[str] = mapped_column(String)                         # e.g. "technical_session_complete"
     recommendation_codes: Mapped[str] = mapped_column(Text)                   # JSON list of codes
     quality_failed: Mapped[bool] = mapped_column(Boolean, default=False)
     quality_issues: Mapped[str] = mapped_column(Text, default="[]")           # JSON list of codes

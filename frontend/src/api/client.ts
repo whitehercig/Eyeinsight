@@ -11,7 +11,13 @@ export interface SessionResponse {
   id: string;
   created_at: string;
   status: string;
-  video_path: string | null;
+}
+
+export interface CameraReadiness {
+  ready: boolean;
+  checks: Record<"lighting" | "face_in_frame" | "distance" | "stability", boolean>;
+  issues: string[];
+  metrics: Record<string, number>;
 }
 
 /**
@@ -20,8 +26,8 @@ export interface SessionResponse {
  */
 export interface AnalysisResult {
   session_id: string;
-  risk_score: number | null;          // null when quality_failed
-  risk_level: "low" | "moderate" | "elevated" | null;
+  risk_score: number | null;          // legacy compatibility field; current MVP returns null
+  risk_level: "low" | "moderate" | "elevated" | null; // legacy compatibility field
   quality_score: number;
   quality_failed: boolean;
   quality_issues: string[];           // e.g. ["lighting_low", "face_not_visible"]
@@ -33,8 +39,10 @@ export interface AnalysisResult {
   risk_confidence?: number | null;
   risk_confidence_type?: string | null;
   top_contributing_factors?: { factor: string; contribution: number }[];
-  summary_code: string;               // e.g. "low_risk_summary"
-  recommendation_codes: string[];     // e.g. ["not_diagnosis", "consult_specialist"]
+  summary_code: string;               // legacy compatibility code
+  recommendation_codes: string[];     // legacy compatibility codes
+  source_video_deleted: boolean;
+  is_demo: boolean;
   created_at: string;
 }
 
@@ -60,17 +68,50 @@ export interface FeatureBundle {
   downloads: Record<string, string>;
 }
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, options);
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail ?? `HTTP ${res.status}`);
+export class ApiError extends Error {
+  constructor(message: string, public status: number) {
+    super(message);
+    this.name = "ApiError";
   }
-  return res.json() as Promise<T>;
+}
+
+async function request<T>(path: string, options?: RequestInit, timeoutMs = 20_000): Promise<T> {
+  const controller = new AbortController();
+  const relayAbort = () => controller.abort();
+  options?.signal?.addEventListener("abort", relayAbort, { once: true });
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(`${BASE}${path}`, { ...options, signal: controller.signal });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new ApiError(body.detail ?? `HTTP ${response.status}`, response.status);
+    }
+    return response.json() as Promise<T>;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError("request_timeout", 408);
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+    options?.signal?.removeEventListener("abort", relayAbort);
+  }
 }
 
 export const createSession = (): Promise<SessionResponse> =>
   request<SessionResponse>("/sessions", { method: "POST" });
+
+export const getSession = (sessionId: string): Promise<SessionResponse> =>
+  request<SessionResponse>(`/sessions/${sessionId}`);
+
+export const createDemoSession = (): Promise<SessionResponse> =>
+  request<SessionResponse>("/sessions/demo", { method: "POST" }, 30_000);
+
+export const checkCamera = (frames: Blob[]): Promise<CameraReadiness> => {
+  const form = new FormData();
+  frames.forEach((frame, index) => form.append("files", frame, `camera-check-${index}.jpg`));
+  return request<CameraReadiness>("/camera-check", { method: "POST", body: form }, 30_000);
+};
 
 export const uploadVideo = (sessionId: string, blob: Blob): Promise<SessionResponse> => {
   const form = new FormData();
@@ -81,8 +122,8 @@ export const uploadVideo = (sessionId: string, blob: Blob): Promise<SessionRespo
   });
 };
 
-export const analyzeSession = (sessionId: string): Promise<AnalysisResult> =>
-  request<AnalysisResult>(`/analyze-session/${sessionId}`, { method: "POST" });
+export const analyzeSession = (sessionId: string, retry = false): Promise<AnalysisResult> =>
+  request<AnalysisResult>(`/analyze-session/${sessionId}${retry ? "?retry=true" : ""}`, { method: "POST" }, 90_000);
 
 export const getResult = (sessionId: string): Promise<AnalysisResult> =>
   request<AnalysisResult>(`/sessions/${sessionId}/result`);

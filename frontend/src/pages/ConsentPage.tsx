@@ -11,7 +11,7 @@ export default function ConsentPage() {
   const consents = [
     { id: "not-diagnosis", label: t("consent_1") },
     { id: "video-upload",  label: t("consent_2") },
-    { id: "specialist",    label: t("consent_3") },
+    { id: "authorized",    label: t("consent_3") },
   ];
 
   const allChecked = consents.every((c) => checked[c.id]);
@@ -48,8 +48,9 @@ export default function ConsentPage() {
                     ? "border-teal-500/50 bg-teal-500/5"
                     : "border-ui hover:border-teal-500/30"
                 }`}>
+                <input type="checkbox" className="sr-only"
+                  checked={!!checked[c.id]} onChange={() => toggle(c.id)} />
                 <div
-                  onClick={() => toggle(c.id)}
                   className={`mt-0.5 w-5 h-5 shrink-0 rounded border-2 flex items-center justify-center transition-all ${
                     checked[c.id] ? "border-teal-500 bg-teal-500" : "border-slate-500"
                   }`}>
@@ -59,8 +60,6 @@ export default function ConsentPage() {
                     </svg>
                   )}
                 </div>
-                <input type="checkbox" className="sr-only"
-                  checked={!!checked[c.id]} onChange={() => toggle(c.id)} />
                 <span className="text-sm leading-relaxed text-ui-muted">{c.label}</span>
               </label>
             ))}

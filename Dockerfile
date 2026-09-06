@@ -14,7 +14,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     EYEINSIGHT_DATABASE_URL=sqlite:////data/eyeinsight.db \
     EYEINSIGHT_STATIC_DIR=/app/frontend_dist \
     EYEINSIGHT_MAX_ANALYSIS_FPS=4 \
-    EYEINSIGHT_ANALYSIS_WIDTH=320
+    EYEINSIGHT_ANALYSIS_WIDTH=320 \
+    EYEINSIGHT_DELETE_SOURCE_VIDEO=true \
+    EYEINSIGHT_SESSION_TTL_HOURS=24
 
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 fonts-dejavu-core && rm -rf /var/lib/apt/lists/*

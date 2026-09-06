@@ -10,6 +10,7 @@ import { useApp } from "../context/AppContext";
 export interface CameraRecorderHandle {
   startRecording: () => void;
   stopRecording: () => void;
+  captureFrame: () => Promise<Blob>;
 }
 
 interface Props {
@@ -64,6 +65,25 @@ const CameraRecorder = forwardRef<CameraRecorderHandle, Props>(
     }, [onCameraReady, onCameraError]);
 
     useImperativeHandle(ref, () => ({
+      captureFrame() {
+        return new Promise((resolve, reject) => {
+          const video = videoRef.current;
+          if (!video || !video.videoWidth || !video.videoHeight) {
+            reject(new Error("camera_frame_unavailable"));
+            return;
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.min(640, video.videoWidth);
+          canvas.height = Math.round(canvas.width * video.videoHeight / video.videoWidth);
+          const context = canvas.getContext("2d");
+          if (!context) {
+            reject(new Error("camera_frame_unavailable"));
+            return;
+          }
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("camera_frame_unavailable")), "image/jpeg", 0.82);
+        });
+      },
       startRecording() {
         if (!streamRef.current) return;
         chunksRef.current = [];
@@ -89,7 +109,7 @@ const CameraRecorder = forwardRef<CameraRecorderHandle, Props>(
           onCameraError("The browser could not encode the recording");
           setIsRecording(false);
         };
-        recorder.start();
+        recorder.start(1000);
         recorderRef.current = recorder;
         setIsRecording(true);
       },

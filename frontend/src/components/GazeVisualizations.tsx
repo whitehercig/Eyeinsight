@@ -11,7 +11,7 @@ interface GazePoint {
 
 interface Props {
   visualizations: { gaze_heatmap?: Heatmap; gaze_path?: GazePoint[] };
-  labels: { heatmap: string; path: string; proxy: string; gaze: string; target: string };
+  labels: { heatmap: string; path: string; proxy: string; gaze: string; target: string; empty: string };
 }
 
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
@@ -22,15 +22,20 @@ export default function GazeVisualizations({ visualizations, labels }: Props) {
     [point.gaze_screen_x, point.gaze_screen_y, point.target_screen_x, point.target_screen_y]
       .every((value) => Number.isFinite(value)),
   );
-  const maxHeat = Math.max(1, ...heatmap.flat().map((value) => Number(value) || 0));
+  const heatValues = heatmap.flat().map((value) => Number(value) || 0);
+  const heatPeak = Math.max(0, ...heatValues);
+  const hasHeatmap = heatmap.length > 0 && heatPeak > 0;
+  const maxHeat = Math.max(1, heatPeak);
   const gazeLine = gazePath.map((point, index) => `${index ? "L" : "M"}${(clamp(point.gaze_screen_x) * 100).toFixed(1)},${((1 - clamp(point.gaze_screen_y)) * 100).toFixed(1)}`).join(" ");
   const targetLine = gazePath.map((point, index) => `${index ? "L" : "M"}${(clamp(point.target_screen_x) * 100).toFixed(1)},${((1 - clamp(point.target_screen_y)) * 100).toFixed(1)}`).join(" ");
 
-  if (!heatmap.length && !gazePath.length) return null;
+  if (!hasHeatmap && gazePath.length < 2) {
+    return <div className="card-glass p-5 mt-4 text-sm text-ui-muted">{labels.empty}</div>;
+  }
 
   return (
     <div className="card-glass p-5 mt-4 space-y-6">
-      {heatmap.length > 0 && (
+      {hasHeatmap && (
         <div>
           <h3 className="font-semibold text-sm uppercase tracking-widest mb-3 text-ui-muted">{labels.heatmap}</h3>
           <div className="grid gap-px rounded overflow-hidden border" style={{ borderColor: "var(--border)", background: "var(--chart-surface)", gridTemplateColumns: `repeat(${heatmap[0].length}, minmax(0, 1fr))` }}>

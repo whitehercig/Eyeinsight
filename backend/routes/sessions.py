@@ -4,6 +4,7 @@ Session management routes:
 - POST /api/sessions/{id}/upload-video — upload recorded video
 """
 
+import json
 import os
 import shutil
 import uuid
@@ -16,6 +17,8 @@ import aiofiles
 from database import get_db
 from models import AnalysisResult, Session
 from schemas import SessionResponse
+from services.retention_service import purge_expired_sessions
+from services.demo_session_service import create_demo_artifacts
 from services.video_feature_service import FEATURES_DIR
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
@@ -33,10 +36,49 @@ def create_session(db: DBSession = Depends(get_db)):
     Create a new screening session and return its ID.
     Called before recording begins so we have an ID to associate the video with.
     """
+    purge_expired_sessions(db)
     session = Session(id=str(uuid.uuid4()), status="created")
     db.add(session)
     db.commit()
     db.refresh(session)
+    return session
+
+
+@router.post("/demo", response_model=SessionResponse)
+def create_demo_session(db: DBSession = Depends(get_db)):
+    """Create a synthetic report that records no person and stores no raw video."""
+    purge_expired_sessions(db)
+    session = Session(id=str(uuid.uuid4()), status="analyzed", video_path=None)
+    db.add(session)
+    db.flush()
+    artifacts = create_demo_artifacts(session.id)
+    result = AnalysisResult(
+        session_id=session.id,
+        risk_score=None,
+        risk_level=None,
+        quality_score=93.0,
+        quality_failed=False,
+        quality_issues="[]",
+        quality_metrics=json.dumps(artifacts["quality_metrics"]),
+        feature_paths=json.dumps(artifacts["feature_paths"]),
+        session_features_json=json.dumps(artifacts["session_features"]),
+        model_version="synthetic_demo_v1",
+        model_explanation=json.dumps({"output_type": "synthetic_interface_demonstration"}),
+        summary_code="synthetic_demo_complete",
+        recommendation_codes=json.dumps(["not_diagnosis"]),
+    )
+    db.add(result)
+    db.commit()
+    db.refresh(session)
+    return session
+
+
+@router.get("/{session_id}", response_model=SessionResponse)
+def get_session(session_id: str, db: DBSession = Depends(get_db)):
+    """Return durable session status for polling and browser recovery."""
+    session = db.query(Session).filter(Session.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
     return session
 
 
